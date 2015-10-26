@@ -3,10 +3,10 @@ hive --hiveconf hive.root.logger=INFO,console
 create external table user_info (bid_id String, timestmp String, log_type String, iPinyou_id String, user_agent String, ip String, region String, city String, ad_exchange String, domain String, url String, anonymous_url_id String, ad_slot_id String, ad_slot_width String, ad_slot_height String, ad_slot_visibility String, ad_slot_format String, ad_slot_floor_price String, creative_id String, bidding_price String, paying_price String, key_page_url String, advertiser_id String,  user_tags String) ROW FORMAT DELIMITED FIELDS TERMINATED BY '\t' LOCATION '/root/ip/';
 
 
-ADD jar ./bigdata-0.0.1-SNAPSHOT-jar-with-dependencies.jar;
+add jar ./bigdata-0.0.1-SNAPSHOT-jar-with-dependencies.jar;
 add jar ./bigdata-0.0.1-SNAPSHOT.jar;
 
-CREATE FUNCTION process_agent as 'com.epam.bigdata.hive.second.UserAgentFunction';
+create function process_agent as 'com.epam.bigdata.hive.second.UserAgentFunction';
 
 //temporary table
 CREATE temporary TABLE user_agent AS SELECT ui.browser as browser, ui.os as os, ui.device as device, city as city_id FROM user_info lateral view process_agent(user_agent, 'browser', 'os', 'device') ui as browser, os, device group by city_id, browser, os, device;

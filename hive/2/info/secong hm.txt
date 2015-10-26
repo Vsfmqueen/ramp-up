@@ -1,54 +1,18 @@
+hive --hiveconf hive.root.logger=INFO,console
+
 create external table user_info (bid_id String, timestmp String, log_type String, iPinyou_id String, user_agent String, ip String, region String, city String, ad_exchange String, domain String, url String, anonymous_url_id String, ad_slot_id String, ad_slot_width String, ad_slot_height String, ad_slot_visibility String, ad_slot_format String, ad_slot_floor_price String, creative_id String, bidding_price String, paying_price String, key_page_url String, advertiser_id String,  user_tags String) ROW FORMAT DELIMITED FIELDS TERMINATED BY '\t' LOCATION '/root/ip/';
 
 ADD jar ./bigdata-0.0.1-SNAPSHOT-jar-with-dependencies.jar;
 add jar ./bigdata-0.0.1-SNAPSHOT.jar;
 
-hive --hiveconf hive.root.logger=INFO,console
-
 CREATE FUNCTION process_agent as 'com.epam.bigdata.hive.second.UserAgentFunction';
 
-SELECT ui.browser as browser, ui.os as os, ui.device as device, city FROM user_info lateral view process_agent(user_agent, 'browser', 'os', 'device') ui as browser, os, device group by city, browser, os, device;
-
-
-
-create table browsers (city_id String, browser String);
-
-from user_agent insert overwrite table browsers select br_rnk.city, br_rnk.browser from (select br.*, rank() over(partition by city order by cnt desc) as rnk from (select city, browser, count(*) as cnt from group by city, browser) as br) as br_rnk where br_rnk .rnk <=5;
-
-
-from user_agent insert overwrite browsers select city_id, browser 
-
-
-from user_agent INSERT OVERWRITE browsers select * from user_agent;
-
-
-FROM user_agent INSERT OVERWRITE table browsers SELECT * WHERE city =217 
-
-
-
-INSERT OVERWRITE table devices SELECT * WHERE city =216;
-
-
 //temporary table
-CREATE TABLE user_agent
-   AS
-SELECT ui.browser as browser, ui.os as os, ui.device as device, city as city_id FROM user_info lateral view process_agent(user_agent, 'browser', 'os', 'device') ui as browser, os, device group by city, browser, os, device;
+CREATE temporary TABLE user_agent AS SELECT ui.browser as browser, ui.os as os, ui.device as device, city as city_id FROM user_info lateral view process_agent(user_agent, 'browser', 'os', 'device') ui as browser, os, device group by city_id, browser, os, device;
 
-//правильный запрос
-(select br_rnk.city, br_rnk.browser from (select br.*, rank() over(partition by city order by cnt desc) as rnk from (select city, browser, count(*) as cnt from user_agent group by city, browser) as br) as br_rnk where br_rnk .rnk <=5;
+//top 5
+select br_rnk.city_id, br_rnk.browser from (select br.*, rank() over(partition by city_id order by cnt desc) as rnk from (select city_id, browser, count(*) as cnt from user_agent group by city_id, browser) as br) as br_rnk where br_rnk .rnk <=5;
 
-select br_rnk.city, br_rnk.os from (select br.*, rank() over(partition by city order by cnt desc) as rnk from (select city, os, count(*) as cnt from user_agent group by city, os) as br) as br_rnk where br_rnk.rnk <=5;
+select br_rnk.city_id, br_rnk.os from (select br.*, rank() over(partition by city_id order by cnt desc) as rnk from (select city_id, os, count(*) as cnt from user_agent group by city_id, os) as br) as br_rnk where br_rnk.rnk <=5;
 
-
-FROM user_agent ua INSERT OVERWRITE table browsers  SELECT * inner join (select br_rnk.city, br_rnk.browser from (select br.*, rank() over(partition by city order by cnt desc) as rnk from (select city, browser, count(*) as cnt from user_agent group by city, browser) as br) as br_rnk where br_rnk .rnk <=5) on ua.city = br_rnk.city and ua.browser = br_rnk.browser;
-
-
-
-
-
-
-select * from 
-    (select t.*, rank() over(partition by city_id order by cnt desc) as rnk 
-     from (select test.*, count(*) as cnt from test
-    group by city_id, device) as t)
-as tt where tt.rnk <=5
+select br_rnk.city_id, br_rnk.device from (select br.*, rank() over(partition by city_id order by cnt desc) as rnk from (select city_id, device, count(*) as cnt from user_agent group by city_id, device) as br)as br_rnk where br_rnk.rnk <=5;

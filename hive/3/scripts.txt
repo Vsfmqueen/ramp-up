@@ -1,4 +1,7 @@
 create 'plane-data', 'f1'
 
-hbase org.apache.hadoop.hbase.mapreduce.ImportTsv -Dimporttsv.separator=, -Dimporttsv.columns=HBASE_ROW_KEY,f1:tailnum,f1:type,f1:manufacturer,f1:issue_date, f1:model,f1:status,f1:aircraft_type,f1:engine_type,f1:year plane-data /user/root/airports/planes.csv
+hbase org.apache.hadoop.hbase.mapreduce.ImportTsv -Dimporttsv.separator=, -Dimporttsv.columns=HBASE_ROW_KEY,f1:type,f1:manufacturer,f1:issue_date, f1:model,f1:status,f1:aircraft_type,f1:engine_type,f1:year plane-data /user/root/airports/planes.csv
+
+CREATE external TABLE hbase_plane_data2(tailnum String, type String, manufacturer String, issue_date String, model String, status String, aircraft_type String, engine_type String, year String) STORED BY 'org.apache.hadoop.hive.hbase.HBaseStorageHandler' WITH SERDEPROPERTIES("hbase.columns.mapping" = ":key,f1:type,f1:manufacturer,f1:issue_date,f1:model,f1:status,f1:aircraft_type,f1:engine_type") TBLPROPERTIES ("hbase.table.name" = "plane-data");
+
 

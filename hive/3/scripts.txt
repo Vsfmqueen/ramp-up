@@ -1,0 +1,4 @@
+create 'plane-data', 'f1'
+
+hbase org.apache.hadoop.hbase.mapreduce.ImportTsv -Dimporttsv.separator=, -Dimporttsv.columns=HBASE_ROW_KEY,f1:tailnum,f1:type,f1:manufacturer,f1:issue_date, f1:model,f1:status,f1:aircraft_type,f1:engine_type,f1:year plane-data /user/root/airports/planes.csv
+

@@ -17,10 +17,43 @@ hiveContext.sql("create table user_agent (bid_id String, timestmp String, log_ty
 hadoop fs -put imp.20131019.txt
 val user_agents = sc.textFile("hdfs://sandbox.hortonworks.com:8020/user/root/imp.20131019.txt")
 
-case class UserAgents(bidId: String, timestmp: String, logType: String, iPinyouId: String, userAgent: String, ip: String, region: String, city: String, adExchange: String, domain: String, url: String, anonymousUrlId: String, adSlotId: String,  adSlotWidth: String, adSlotHeight: String, adSlotVisibility: String, adSlotFormat: String, adSlotFloorPrice: String, creativeId: String, biddingPrice: String, payingPrice: String, keyPageUrl: String)  //, advertiserId: String userTags: String
+class UserAgents(bidId: String, timstmp: String, logType: String, iPinyouId: String, userAgent: String, ip: String, region: String, city: String, adExchange: String, domain: String, url: String, anonymousUrlId: String, adSlotId: String, adSlotWidth: String, adSlotHeight: String, adSlotVisibility: String, adSlotFormat: String, adSlotFloorPrice: String, creativeId: String, biddingPrice: String, payingPrice: String, keyPageUrl: String,  advertiserId: String,  userTags: String) extends Product {
+  override def productElement(n: Int): Any = n match {
+    case 0 => bidId
+    case 1 => timstmp
+    case 2 => logType
+    case 3 => iPinyouId
+    case 4 => userAgent
+    case 5 => ip
+    case 6 => region
+    case 7 => city
+    case 8 => adExchange
+    case 9 => domain
+    case 10 => url
+    case 11 => anonymousUrlId
+    case 12 => adSlotId
+    case 13 => adSlotWidth
+    case 14 => adSlotHeight
+    case 15 => adSlotVisibility
+    case 16 => adSlotFormat
+    case 17 => adSlotFloorPrice
+    case 18 => creativeId
+    case 19 => biddingPrice
+    case 20 => payingPrice
+    case 21 => keyPageUrl
+    case 22 => advertiserId
+    case 23 => userTags
+    case _ => throw new IndexOutOfBoundsException(n.toString())
+  }
 
-val parsedAgents = user_agents.map(_.split("\t")).map(row => UserAgents(row(0), row(1), row(2), row(3), row(4), row(5), row(6), row(7), row(8), row(9), row(10), row(11), row(12), row(13), row(14), row(15), row(16), row(17), row(18), row(19),  row(20),  row(21))).toDF()
+  override def productArity: Int = 24
+  override def canEqual(that: Any): Boolean = that.isInstanceOf[UserAgents]
+}
 
+val parsedAgents = user_agents.map(_.split("\t")).map(
+  row => new UserAgents(row(0), row(1), row(2), row(3), row(4), row(5), row(6), row(7), row(8), row(9), row(10), row(11),
+    row(12), row(13), row(14), row(15), row(16), row(17), row(18), row(19), row(20), row(21), row(22), row(23))).toDF()
+	
 parsedAgents.registerTempTable("user_agents_temp")
 val results = sqlContext.sql("SELECT * FROM user_agents_temp")
 results.saveAsOrcFile("/apps/hive/warehouse/user_agent") 
@@ -28,4 +61,6 @@ results.saveAsOrcFile("/apps/hive/warehouse/user_agent")
 hiveContext.sql("select * from user_agent limit 5").collect.foreach(println);
 
 
+3. 
 
+curl -s -d execute="select distinct type from hbase_plane_data;" 'http://localhost:50111/templeton/v1/hive?user.name=root'

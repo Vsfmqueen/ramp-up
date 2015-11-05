@@ -60,7 +60,3 @@ results.saveAsOrcFile("/apps/hive/warehouse/user_agent")
 
 hiveContext.sql("select * from user_agent limit 5").collect.foreach(println);
 
-
-3. 
-
-curl -s -d execute="select distinct type from hbase_plane_data;" 'http://localhost:50111/templeton/v1/hive?user.name=root'

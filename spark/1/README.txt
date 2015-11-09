@@ -1,0 +1,1 @@
+spark-submit spark-sbt_2.11-1.0.jar WorldCount

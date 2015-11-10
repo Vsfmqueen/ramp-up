@@ -1,8 +1,9 @@
+import java.io._
+
 import org.apache.spark.rdd.RDD
 import org.apache.spark.{SparkConf, SparkContext}
 
 import scala.util.matching.Regex
-import java.io._
 
 object AverageCount {
   def main(args: Array[String]) {

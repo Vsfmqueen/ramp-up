@@ -4,7 +4,9 @@ version := "1.0"
 
 scalaVersion := "2.11.7"
 
-libraryDependencies += "org.apache.spark" % "spark-core_2.10" % "1.5.1"
+libraryDependencies ++= Seq("org.apache.spark" % "spark-core_2.10" % "1.5.1",
+                            "org.apache.spark" % "spark-sql_2.10" % "1.5.1"
+)
 
 resolvers += "Typesafe repository" at "http://repo.typesafe.com/typesafe/releases/"
 

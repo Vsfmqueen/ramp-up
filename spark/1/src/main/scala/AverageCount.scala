@@ -1,79 +1,68 @@
-import java.io._
-
 import org.apache.spark.rdd.RDD
-import org.apache.spark.{SparkConf, SparkContext}
+import org.apache.spark.{Accumulator, SparkConf, SparkContext}
 
 import scala.util.matching.Regex
 
 object AverageCount {
   def main(args: Array[String]) {
-    val conf = new SparkConf().setAppName("Count Bytes Application")
+    val conf = new SparkConf().setAppName("Count Bytes Application").setMaster("local[4]")
     val ctx = new SparkContext(conf)
-    var accumulators = createAccumulators(ctx);
 
-    val parsedLogs = parseLogs(ctx, accumulators)
-    val countMap = parsedLogs.mapValues(word => (word, 1))
-    val reducedData = countMap.reduceByKey((x, y) => (x._1 + y._1, x._2 + y._2))
-    val sum = reducedData.mapValues { case (sum, count) => (sum) / count}
-    sum.saveAsTextFile("d:\\logs\\output.txt")
-    saveAccumulators(accumulators);
+    val mozillaAc = ctx.accumulator(0, "Mozilla")
+    val operaAc = ctx.accumulator(0, "Opera")
+    val otherAc = ctx.accumulator(0, "Other")
+
+    val logData = ctx.textFile("logs\\000000")
+
+    val parsedLogs = parseLogs(logData, mozillaAc, operaAc, otherAc)
+    val sum = countAverageSum(parsedLogs);
+
+    sum.saveAsTextFile("output")
+
+    println("Mozilla browser usages = " + mozillaAc)
+    println("Opera browser usages = " + operaAc)
+    println("Other browser usages = " + otherAc)
   }
 
-  def parseLogs(ctx: SparkContext, accumulators: scala.collection.mutable.Map[String, Int]): RDD[(String, Int)] = {
-    val logData = ctx.textFile("d:\\logs\\000000")
+  def parseLogs(logData: RDD[String], mozillaAc: Accumulator[Int], operaAc: Accumulator[Int],
+                otherAc: Accumulator[Int]): RDD[(String, Int)] = {
+
     val ipPattern = new Regex("^ip[\\d]+")
     val bytesPattern = new Regex("\\d{3}+ \\d+")
 
     val parsedData = logData.map(line => {
-      calculateBrowsers(accumulators, line)
+      calculateBrowsers(mozillaAc, operaAc, otherAc, line)
       val ip = ipPattern.findFirstIn(line).getOrElse("none")
-      var bytes = "";
-      val ipBytes = bytesPattern.findAllMatchIn(line).foreach { digits => bytes =
-        digits.group(0).split(" ") {
+      var bytes = 0;
+      bytesPattern.findAllMatchIn(line).foreach { digits => {
+        val parsedBytes = digits.group(0).split(" ") {
           1
         }
+        if (!parsedBytes.isEmpty) {
+          bytes = parsedBytes.toInt
+        }
       }
-      (ip, bytes.toInt)
+      }
+      (ip, bytes)
     })
     return parsedData
   }
 
-  def calculateBrowsers(browsers: scala.collection.mutable.Map[String, Int], line: String): Unit = {
-    var key = "Other";
+  def calculateBrowsers(mozillaAc: Accumulator[Int], operaAc: Accumulator[Int],
+                        otherAc: Accumulator[Int], line: String): Unit = {
     if (line.contains("Mozilla")) {
-      key = "Mozilla"
+      mozillaAc += 1;
     } else if (line.contains("Opera")) {
-      key = "Opera"
-    } else if (line.contains("Chrome")) {
-      key = "Chrome"
+      operaAc += 1;
+    } else {
+      otherAc += 1;
     }
-
-    val value = browsers.get(key).getOrElse(0)
-    var nextValue = value + 1
-    browsers.put(key, nextValue)
   }
 
-  def createAccumulators(ctx: SparkContext): scala.collection.mutable.Map[String, Int] = {
-    val browsers = scala.collection.mutable.Map[String, Int]()
-    browsers.put("Mozilla", 0)
-    browsers.put("Opera", 0)
-    browsers.put("Other", 0)
-    return browsers;
+  def countAverageSum(parsedLogs: RDD[(String, Int)]): RDD[(String, Int)] = {
+    val countMap = parsedLogs.mapValues(word => (word, 1))
+    val reducedData = countMap.reduceByKey((x, y) => (x._1 + y._1, x._2 + y._2))
+    val sum = reducedData.mapValues { case (sum, count) => (sum) / count}
+    return sum;
   }
-
-  def saveAccumulators(browsers: scala.collection.mutable.Map[String, Int]): Unit = {
-    val fileWriter = new FileWriter("d:\\logs\\browsers.txt")
-    /*  using(fileWriter) {
-        browsers.foreach{
-          x=> {fileWriter.write(data)}
-        }
-      }*/
-  }
-
-  def using[A <: {def close() : Unit}, B](param: A)(f: A => B): B =
-    try {
-      f(param)
-    } finally {
-      param.close()
-    }
 }

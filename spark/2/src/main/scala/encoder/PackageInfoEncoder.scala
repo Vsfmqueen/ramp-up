@@ -9,12 +9,12 @@ import model.PackageInfo
 import org.apache.kafka.common.serialization.Serializer
 
 /**
-  * Created by root on 11/24/15.
-  */
-case class PackageInfoEncoder(props: VerifiableProperties = null) extends Encoder[PackageInfo] with Serializer[PackageInfo]{
+ * Created by root on 11/24/15.
+ */
+case class PackageInfoEncoder(props: VerifiableProperties = null) extends Encoder[PackageInfo] with Serializer[PackageInfo] {
 
   def this() {
-   this(null)
+    this(null)
   }
 
   override def configure(configs: util.Map[String, _], isKey: Boolean): Unit = {}
@@ -22,6 +22,7 @@ case class PackageInfoEncoder(props: VerifiableProperties = null) extends Encode
   override def serialize(topic: String, data: PackageInfo): Array[Byte] = {
     return this.toBytes(data)
   }
+
   override def close(): Unit = {
 
   }

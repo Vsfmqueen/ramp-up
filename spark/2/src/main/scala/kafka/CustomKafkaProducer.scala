@@ -6,20 +6,20 @@ import model.{Alert, PackageInfo}
 import org.apache.kafka.clients.producer.{KafkaProducer, ProducerConfig, ProducerRecord}
 
 class CustomKafkaProducer {
-  private val alertProducer : KafkaProducer[String, Object] = createAlertProducer()
-  private val packageProducer : KafkaProducer[String, PackageInfo] = createProductProducer()
+  private val alertProducer: KafkaProducer[String, Object] = createAlertProducer()
+  private val packageProducer: KafkaProducer[String, PackageInfo] = createProductProducer()
 
-  def sendAlert(alertMsg: Alert): Unit ={
+  def sendAlert(alertMsg: Alert): Unit = {
     val message = new ProducerRecord[String, Object]("alerts", null, alertMsg.toString)
     alertProducer.send(message)
   }
 
-  def sendPackageInfo(packageInfo: PackageInfo): Unit ={
+  def sendPackageInfo(packageInfo: PackageInfo): Unit = {
     val message = new ProducerRecord[String, PackageInfo]("ips", null, packageInfo)
     packageProducer.send(message)
   }
 
-  private def createProductProducer(): KafkaProducer[String, PackageInfo] ={
+  private def createProductProducer(): KafkaProducer[String, PackageInfo] = {
     val props = new util.HashMap[String, Object]()
 
     props.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, "sandbox.hortonworks.com:6667")
@@ -32,7 +32,7 @@ class CustomKafkaProducer {
     new KafkaProducer[String, PackageInfo](props)
   }
 
-  private def createAlertProducer(): KafkaProducer[String, Object] ={
+  private def createAlertProducer(): KafkaProducer[String, Object] = {
     val props = new util.HashMap[String, Object]()
 
     props.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, "sandbox.hortonworks.com:6667")
